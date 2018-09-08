@@ -1,0 +1,4 @@
+apps:
+  - script   : devp2pmonitor.js
+    instances: 10
+    exec_mode: cluster
