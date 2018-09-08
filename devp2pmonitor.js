@@ -5,7 +5,6 @@ const { EventEmitter } = require('events')
 const secp256k1 = require('secp256k1')
 const { randomBytes } = require('crypto')
 const createDebugLogger = require('debug')
-const ms = require('ms')
 const devp2p = require('ethereumjs-devp2p')
 const KBucket = require('ethereumjs-devp2p').KBucket
 const BanList = require('ethereumjs-devp2p').BanList
