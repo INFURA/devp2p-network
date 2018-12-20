@@ -17,7 +17,7 @@ const debug = createDebugLogger('devp2p:dpt')
 
 const mongoose = require('mongoose')
 
-const web3Url = 'https://mainnet.infura.io/devp2p-network-research'
+const web3Url = 'https://mainnet.infura.io/v3/09bcdf3656ee4a80b05a4a921358d109'
 web3.setProvider(new web3.providers.HttpProvider(web3Url))
 
 // Connection URL
@@ -98,10 +98,10 @@ rlpx.on('peer:added', (peer) => {
     b.address = peer._socket.remoteAddress
     b.port = peer._socket.remotePort
     var peerGeo = geoip.lookup(b.address)
-    if ((typeof peerGeo !== 'undefined') && (peerGeo !== null) && (typeof peerGeo.ll !== 'undefined') && (typeof peerGeo.ll.country !== 'undefined')) {
+    if ((peerGeo) && (peerGeo.ll) && (peerGeo.ll.country)) {
         b.country = peerGeo.ll.country
     }
-    if ((typeof peerGeo !== 'undefined') && (peerGeo !== null) && (peerGeo.city !== 'undefined') && (peerGeo.city != null)) {
+    if ((peerGeo) && (peerGeo.city)) {
         b.city = peerGeo.city
     }
     b.latitude = peerGeo.ll[0]
