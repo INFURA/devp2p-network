@@ -6,7 +6,10 @@ Monitor and record metrics from the DevP2P network in MongoDB and visualize the 
 
 ##### Prerequisites:
 - Docker & Docker Compose
-- NodeJS
+    - [OS X](https://docs.docker.com/docker-for-mac/install/#install-and-run-docker-for-mac)
+    - [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu)
+    - [Windows](https://docs.docker.com/docker-for-windows/install)
+- [NodeJS](https://nodejs.org/en/download)
 
 ##### Install the node dependencies
 ```npm install```
@@ -27,6 +30,7 @@ It will take a minute for the client to connect to DevP2P peers. Once it connect
 First Name: [anything]
 Last Name: [anything]
 Email: [anything]
+...
 ```
 
 
