@@ -2,6 +2,8 @@
 
 Monitor and record metrics from the DevP2P network in MongoDB and visualize the data using the Metabase analytics tool.
 
+<img width="800" alt="devp2p-network-screencap" src="https://user-images.githubusercontent.com/1383412/50279407-6c982e80-03fe-11e9-9156-09a6567dda06.png">
+
 ##### Prerequisites:
 - Docker & Docker Compose
 - NodeJS
