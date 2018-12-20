@@ -1,7 +1,7 @@
 {
-  "name": "tx-relay",
+  "name": "devp2p-network",
   "version": "1.0.0",
-  "description": "devp2p eth tx relay",
+  "description": "A devp2p node indexer",
   "main": "app.js",
   "dependencies": {
     "assert": "^1.4.1",
@@ -31,8 +31,13 @@
   },
   "devDependencies": {},
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Infura",
-  "license": ""
+  "author": {
+    "name": "E.G. Galano",
+    "email": "eg.galano@gmail.com",
+    "url": "infura.io"
+  },
+  "license": "Apache-2.0"
 }
