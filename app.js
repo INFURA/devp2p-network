@@ -6,22 +6,19 @@ const secp256k1 = require('secp256k1')
 const { randomBytes } = require('crypto')
 const createDebugLogger = require('debug')
 const devp2p = require('ethereumjs-devp2p')
-const KBucket = require('ethereumjs-devp2p').KBucket
-const BanList = require('ethereumjs-devp2p').BanList
-const DPT = require('ethereumjs-devp2p').DPT
-const ETH = require('ethereumjs-devp2p').ETH
+const mongoose = require('mongoose')
 const geoip = require('geoip-lite')
 const Web3 = require('web3')
-const web3 = new Web3()
 const debug = createDebugLogger('devp2p:dpt')
 
-const mongoose = require('mongoose')
+const web3 = new Web3()
 
-const web3Url = 'https://mainnet.infura.io/v3/09bcdf3656ee4a80b05a4a921358d109'
-web3.setProvider(new web3.providers.HttpProvider(web3Url))
+// Web3 Connection
+const WEB3_URL = 'https://mainnet.infura.io/v3/09bcdf3656ee4a80b05a4a921358d109'
+web3.setProvider(new web3.providers.HttpProvider(WEB3_URL))
 
-// Connection URL
-const url = 'mongodb://localhost:27017'
+// MongoDB Connection 
+const MONGO_URL = 'mongodb://localhost:27017'
 var db = mongoose.connection
 
 var Schema = mongoose.Schema
@@ -69,7 +66,7 @@ const myStatus = {
     genesisHash: GENESIS_HASH,
     bestHash: GENESIS_HASH
   }
-const dpt = new DPT(Buffer.from(PRIVATE_KEY, 'hex'), {
+const dpt = new devp2p.DPT(Buffer.from(PRIVATE_KEY, 'hex'), {
   endpoint: {
     address: '0.0.0.0',
     udpPort: null,
@@ -79,7 +76,7 @@ const dpt = new DPT(Buffer.from(PRIVATE_KEY, 'hex'), {
 // RLPx
 const rlpx = new devp2p.RLPx(PRIVATE_KEY, {
   dpt: dpt,
-  clientId: `ethereumjs-devp2p/v2.5.0-research/${os.platform()}-${os.arch()}/nodejs`,
+  clientId: `ethereumjs-devp2p/v2.5.1-research/${os.platform()}-${os.arch()}/nodejs`,
   maxPeers: 25,
   capabilities: [
     devp2p.ETH.eth63,
@@ -122,12 +119,15 @@ rlpx.on('peer:added', (peer) => {
         b.totalDifficulty = peerStatus.td.toString('hex')
         web3.eth.getBlock(b.bestHash, false)
         .then(function(block) {
-            b.bestBlockNumber = block.number
+            if ((block) && (block.number)) {
+                b.bestBlockNumber = block.number
+            }
+            else {
             web3.eth.getBlockNumber()
                 .then(function (infuraBlockNumber) {
                     b.infuraBlockNumber = infuraBlockNumber
                     b.infuraDrift = Math.abs(b.infuraBlockNumber - b.bestBlockNumber)
-                    mongoose.connect('mongodb://localhost/devp2p')
+                    mongoose.connect(MONGO_URL)
                     db.on('error', console.error.bind(console, 'connection error:'))
                     db.once('open', function() {
                       b.save()
@@ -141,6 +141,7 @@ rlpx.on('peer:added', (peer) => {
                 .catch(function (err) {
                     console.log(err)
                 })
+        }
         })
         .catch(function(err) {
             console.log(err)
