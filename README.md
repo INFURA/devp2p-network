@@ -18,7 +18,7 @@ Monitor and record metrics from the DevP2P network in MongoDB and visualize the 
 ```docker-compose up --detach```
 
 ##### Run the DevP2P monitor
-```node app.js```
+```npm start```
 
 It will take a minute for the client to connect to DevP2P peers. Once it connects to the first peer it will save the node's info to MongoDB and you should be able to see data in your dashboard.
 
