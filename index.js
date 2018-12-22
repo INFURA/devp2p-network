@@ -13,7 +13,7 @@ const web3Url = `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
 web3.setProvider(new web3.providers.HttpProvider(web3Url))
 
 const EthPeer = db.EthPeer
-const conn = db.getConnection()
+
 const PRIVATE_KEY = randomBytes(32)
 const BOOTNODES = require('ethereum-common').bootstrapNodes.map((node) => {
   return {
@@ -99,14 +99,14 @@ rlpx.on('peer:added', (peer) => {
         .then((infuraBlockNumber) => {
             debug(`Infura Block: ${infuraBlockNumber}`)
             b.infuraBlockNumber = infuraBlockNumber
-            b.infuraDrift = Math.abs(b.infuraBlockNumber - b.bestBlockNumber)
+            b.infuraDrift = Math.abs(b.infuraBlockNumber - b.bestBlockNumber) || 0
             debug(`Found Drift: ${b.infuraDrift}`)
             // db.on('error', console.error.bind(console, 'connection error:'))
             b.save().then((ethpeer) => {
               debug('Saved peer: ' + ethpeer.enode)
             })
         })
-        .catch((err) => {
+        .catch(function (err) {
             console.error(err)
         })
     })

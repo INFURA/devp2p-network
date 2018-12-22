@@ -20,14 +20,15 @@
     "lodash": "^4.17.11",
     "lru-cache": "^4.1.5",
     "moment": "^2.23.0",
-    "mongodb": "^3.1.10",
-    "mongoose": "^5.4.0",
     "ms": "^2.1.1",
+    "pg": "^7.7.1",
+    "pg-hstore": "^2.3.2",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "rlp": "^2.2.1",
     "rlp-encoding": "^3.0.0",
     "safe-buffer": "^5.1.2",
+    "sequelize": "^4.42.0",
     "web3": "^1.0.0-beta.37"
   },
   "devDependencies": {
@@ -40,7 +41,7 @@
     "eslint-plugin-standard": "^4.0.0"
   },
   "scripts": {
-    "start": "INFURA_ID=09bcdf3656ee4a80b05a4a921358d109 node app.js",
+    "start": "INFURA_ID=09bcdf3656ee4a80b05a4a921358d109 node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": {

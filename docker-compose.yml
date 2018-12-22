@@ -1,17 +1,16 @@
 version: '3.3'
 
 services:
+  pg:
+    image: postgres:11
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: 3th3r3um
+      POSTGRES_DB: devp2p
 
-  mongo:
-    image: mongo
-    restart: always
-    ports:
-      - 27017:27017
-  mongo-express:
-    image: mongo-express
-    restart: always
-    ports:
-      - 8081:8081
   metabase:
     image: metabase/metabase
     restart: always
