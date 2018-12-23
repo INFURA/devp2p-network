@@ -33,10 +33,11 @@ Email: [anything]
 ...
 ```
 
-
 ```
 Database Info:
-Hostname: mongo
-Port: 27017
+Hostname: pg
+Port: 5432
+Username: pguser
+Password: 3th3r3um
 Database Name: devp2p
 ```
