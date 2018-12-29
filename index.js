@@ -4,7 +4,7 @@ const Buffer = require('safe-buffer').Buffer
 const { randomBytes } = require('crypto')
 const devp2p = require('ethereumjs-devp2p')
 const geoip = require('geoip-lite')
-const debug = require('debug')('infura:dpt')
+const debug = require('debug')('infura:main')
 const Web3 = require('web3')
 const web3 = new Web3()
 const _ = require('lodash')
@@ -57,16 +57,19 @@ rlpx.on('error', (err) => console.error(chalk.red(`RLPx error: ${err.stack || er
 
 rlpx.on('peer:added', (peer) => {
     let hello = peer.getHelloMessage()
-    let peerGeo = geoip.lookup(peer._socket.remoteAddress)
-    let b = new EthPeer({
-      address: peer._socket.remoteAddress,
-      capabilitites: hello.capabilities,
+    let capabilityStr = _.map(hello.capabilities, (cap) => { return `${cap.name}.${cap.version}`})
+    let address = peer._socket.remoteAddress
+
+    debug(`${address}: ${capabilityStr}`)
+    let peerGeo = geoip.lookup(address)
+    let b = EthPeer.build({
+      address: address,
+      capabilities: capabilityStr,
       clientId: hello.clientId,
       enode: hello.id.toString('hex'),
       port: peer._socket.remotePort,
       timestamp: new Date(),
     })
-
     if (_.has(peerGeo, 'll.country')) {
         b.country = peerGeo.ll.country
     }
@@ -85,7 +88,7 @@ rlpx.on('peer:added', (peer) => {
     const eth = peer.getProtocols()[0]
     eth.sendStatus(myStatus)
     eth.once('status', (peerStatus) => {
-        debug(`Received status ${peer._socket.remoteAddress}`)
+        debug(`${address}: Received status`)
         b.bestHash = '0x' + peerStatus.bestHash.toString('hex')
         b.totalDifficulty = peerStatus.td.toString('hex')
         web3.eth.getBlock(b.bestHash, false)
@@ -103,7 +106,7 @@ rlpx.on('peer:added', (peer) => {
             debug(`Found Drift: ${b.infuraDrift}`)
             // db.on('error', console.error.bind(console, 'connection error:'))
             b.save().then((ethpeer) => {
-              debug('Saved peer: ' + ethpeer.enode)
+              debug(`${address}: Saved peer ${ethpeer.enode }`)
             })
         })
         .catch(function (err) {
@@ -113,9 +116,9 @@ rlpx.on('peer:added', (peer) => {
 })
 
 rlpx.on('peer:removed', (peer) => {
-  // console.log(peer.getDisconnectPrefix(peer._disconnectReason))
-  const eth = peer.getProtocols()[0]
-  eth.sendStatus(myStatus)
+  debug(peer._socket.remoteAddress, peer.getDisconnectPrefix(peer._disconnectReason))
+  // const eth = peer.getProtocols()[0]
+  // eth.sendStatus(myStatus)
 })
 
 for (let bootnode of BOOTNODES) {
