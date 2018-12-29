@@ -12,7 +12,7 @@ const db = require('./lib/db')()
 const web3Url = `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
 web3.setProvider(new web3.providers.HttpProvider(web3Url))
 
-const EthPeer = db.EthPeer
+const {EthPeer, PeerErr} = db
 
 const PRIVATE_KEY = randomBytes(32)
 const BOOTNODES = require('ethereum-common').bootstrapNodes.map((node) => {
@@ -58,12 +58,37 @@ rlpx.on('error', (err) => console.error(chalk.red(`RLPx error: ${err.stack || er
 rlpx.on('peer:added', (peer) => {
     let hello = peer.getHelloMessage()
     let capabilityStr = _.map(hello.capabilities, (cap) => { return `${cap.name}.${cap.version}`})
-    let address = peer._socket.remoteAddress
+    let {remoteAddress, remotePort} = peer._socket
+    let splitClientId = hello.clientId.split('/')
+    let peerGeo = geoip.lookup(remoteAddress)
 
-    debug(`${address}: ${capabilityStr}`)
-    let peerGeo = geoip.lookup(address)
+    peer.on('error', (err) => {
+      debug(`${remoteAddress}:${remotePort} (Peer Error) ${err}`)
+      PeerErr.create({
+        address: remoteAddress,
+        capabilities: capabilityStr,
+        clientId: hello.clientId,
+        enode: hello.id.toString('hex'),
+        port: peer._socket.remotePort,
+        timestamp: new Date(),
+        error: err.message,
+        clientMeta1: splitClientId[0],
+        clientMeta2: splitClientId[1],
+        clientMeta3: splitClientId[2],
+        clientMeta4: splitClientId[3],
+        latitude: peerGeo.ll[0],
+        longitude: peerGeo.ll[1],
+      }).then(() => {
+        debug('Saved peer error')
+      })
+      .catch((err) => {
+        debug(`Error saving peerErr: ${err}`)
+      })
+    })
+
+    debug(`${remoteAddress}: ${capabilityStr}`)
     let b = EthPeer.build({
-      address: address,
+      address: remoteAddress,
       capabilities: capabilityStr,
       clientId: hello.clientId,
       enode: hello.id.toString('hex'),
@@ -79,7 +104,6 @@ rlpx.on('peer:added', (peer) => {
     b.latitude = peerGeo.ll[0]
     b.longitude = peerGeo.ll[1]
 
-    var splitClientId = hello.clientId.split('/')
     b.clientMeta1 = splitClientId[0]
     b.clientMeta2 = splitClientId[1]
     b.clientMeta3 = splitClientId[2]
@@ -88,7 +112,7 @@ rlpx.on('peer:added', (peer) => {
     const eth = peer.getProtocols()[0]
     eth.sendStatus(myStatus)
     eth.once('status', (peerStatus) => {
-        debug(`${address}: Received status`)
+        debug(`${remoteAddress}: Received status`)
         b.bestHash = '0x' + peerStatus.bestHash.toString('hex')
         b.totalDifficulty = peerStatus.td.toString('hex')
         web3.eth.getBlock(b.bestHash, false)
@@ -106,7 +130,7 @@ rlpx.on('peer:added', (peer) => {
             debug(`Found Drift: ${b.infuraDrift}`)
             // db.on('error', console.error.bind(console, 'connection error:'))
             b.save().then((ethpeer) => {
-              debug(`${address}: Saved peer ${ethpeer.enode }`)
+              debug(`${remoteAddress}: Saved peer ${ethpeer.enode }`)
             })
         })
         .catch(function (err) {
