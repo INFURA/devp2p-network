@@ -1231,6 +1231,11 @@ ethereumjs-block@^1.7.1:
     ethereumjs-util "^5.0.0"
     merkle-patricia-tree "^2.1.2"
 
+ethereumjs-common@^0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/ethereumjs-common/-/ethereumjs-common-0.6.1.tgz#ec98edf315a7f107afb6acc48e937a8266979fae"
+  integrity sha512-4jOrfDu9qOBTTGGb3zrfT1tE1Hyc6a8LJpEk0Vk9AYlLkBY7crjVICyJpRvjNI+KLDMpMITMw3eWVZOLMtZdhw==
+
 ethereumjs-devp2p@^2.5.1:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/ethereumjs-devp2p/-/ethereumjs-devp2p-2.5.1.tgz#da079c9a56ba358b6bd9bd3789c8707632d6324f"
