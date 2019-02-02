@@ -4,18 +4,20 @@ const Buffer = require('safe-buffer').Buffer
 const { randomBytes } = require('crypto')
 const devp2p = require('ethereumjs-devp2p')
 const geoip = require('geoip-lite')
-const debug = require('debug')('infura:dpt')
+const debug = require('debug')('infura:main')
 const Web3 = require('web3')
 const web3 = new Web3()
 const _ = require('lodash')
 const db = require('./lib/db')()
+const Common = require('ethereumjs-common')
+const c = new Common('mainnet')
 const web3Url = `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
 web3.setProvider(new web3.providers.HttpProvider(web3Url))
 
-const EthPeer = db.EthPeer
+const { EthPeer, PeerErr } = db
 
 const PRIVATE_KEY = randomBytes(32)
-const BOOTNODES = require('ethereum-common').bootstrapNodes.map((node) => {
+const BOOTNODES = c.bootstrapNodes().map((node) => {
   return {
     address: node.ip,
     udpPort: node.port,
@@ -33,13 +35,16 @@ const myStatus = {
   genesisHash: GENESIS_HASH,
   bestHash: GENESIS_HASH
 }
+
 const dpt = new devp2p.DPT(Buffer.from(PRIVATE_KEY, 'hex'), {
   endpoint: {
     address: '0.0.0.0',
     udpPort: null,
     tcpPort: null
-  }
+  },
+  refreshInterval: 20000 // refresh every 20s
 })
+
 // RLPx
 const rlpx = new devp2p.RLPx(PRIVATE_KEY, {
   dpt: dpt,
@@ -56,66 +61,89 @@ const rlpx = new devp2p.RLPx(PRIVATE_KEY, {
 rlpx.on('error', (err) => console.error(chalk.red(`RLPx error: ${err.stack || err}`)))
 
 rlpx.on('peer:added', (peer) => {
-    let hello = peer.getHelloMessage()
-    let peerGeo = geoip.lookup(peer._socket.remoteAddress)
-    let b = new EthPeer({
-      address: peer._socket.remoteAddress,
-      capabilitites: hello.capabilities,
+  let hello = peer.getHelloMessage()
+  let capabilityStr = _.map(hello.capabilities, (cap) => { return `${cap.name}.${cap.version}` })
+  let { remoteAddress, remotePort } = peer._socket
+  let splitClientId = hello.clientId.split('/')
+  let peerGeo = geoip.lookup(remoteAddress)
+
+  peer.on('error', (err) => {
+    debug(`${remoteAddress}:${remotePort} (Peer Error) ${err}`)
+    PeerErr.create({
+      address: remoteAddress,
+      capabilities: capabilityStr,
       clientId: hello.clientId,
+      country: _.has(peerGeo, 'country') ? peerGeo.country : null,
       enode: hello.id.toString('hex'),
       port: peer._socket.remotePort,
       timestamp: new Date(),
+      error: err.message,
+      clientMeta1: splitClientId[0],
+      clientMeta2: splitClientId[1],
+      clientMeta3: splitClientId[2],
+      clientMeta4: splitClientId[3],
+      latitude: peerGeo.ll[0],
+      longitude: peerGeo.ll[1]
+    }).then(() => {
+      debug('Saved peer error')
+    }).catch((err) => {
+      debug(`Error saving peerErr: ${err}`)
     })
+  })
 
-    if (_.has(peerGeo, 'll.country')) {
-        b.country = peerGeo.ll.country
-    }
-    if (_.has(peerGeo, 'city')) {
-        b.city = peerGeo.city
-    }
-    b.latitude = peerGeo.ll[0]
-    b.longitude = peerGeo.ll[1]
+  debug(`${remoteAddress}: ${capabilityStr}`)
+  let b = EthPeer.build({
+    address: remoteAddress,
+    capabilities: capabilityStr,
+    clientId: hello.clientId,
+    enode: hello.id.toString('hex'),
+    port: peer._socket.remotePort,
+    timestamp: new Date(),
+    country: _.has(peerGeo, 'country') ? peerGeo.country : null,
+    city: _.has(peerGeo, 'city') ? peerGeo.city : null,
+    latitude: peerGeo.ll[0],
+    longitude: peerGeo.ll[1],
+    clientMeta1: splitClientId[0],
+    clientMeta2: splitClientId[1],
+    clientMeta3: splitClientId[2],
+    clientMeta4: splitClientId[3]
+  })
 
-    var splitClientId = hello.clientId.split('/')
-    b.clientMeta1 = splitClientId[0]
-    b.clientMeta2 = splitClientId[1]
-    b.clientMeta3 = splitClientId[2]
-    b.clientMeta4 = splitClientId[3]
+  const eth = peer.getProtocols()[0]
+  eth.sendStatus(myStatus)
 
-    const eth = peer.getProtocols()[0]
-    eth.sendStatus(myStatus)
-    eth.once('status', (peerStatus) => {
-        debug(`Received status ${peer._socket.remoteAddress}`)
-        b.bestHash = '0x' + peerStatus.bestHash.toString('hex')
-        b.totalDifficulty = peerStatus.td.toString('hex')
-        web3.eth.getBlock(b.bestHash, false)
-        .then((block) => {
-          if (_.has(block, 'number')) {
-            debug(`Received: ${block.number}`)
-            b.bestBlockNumber = block.number
-          }
-          return web3.eth.getBlockNumber()
+  eth.once('status', (peerStatus) => {
+    debug(`${remoteAddress}: Received status`)
+    b.bestHash = '0x' + peerStatus.bestHash.toString('hex')
+    b.totalDifficulty = peerStatus.td.toString('hex')
+    web3.eth.getBlock(b.bestHash, false)
+      .then((block) => {
+        if (_.has(block, 'number')) {
+          debug(`Received: ${block.number}`)
+          b.bestBlockNumber = block.number
+        }
+        return web3.eth.getBlockNumber()
+      })
+      .then((infuraBlockNumber) => {
+        debug(`Infura Block: ${infuraBlockNumber}`)
+        b.infuraBlockNumber = infuraBlockNumber
+        b.infuraDrift = Math.abs(b.infuraBlockNumber - b.bestBlockNumber) || 0
+        debug(`Found Drift: ${b.infuraDrift}`)
+        // db.on('error', console.error.bind(console, 'connection error:'))
+        b.save().then((ethpeer) => {
+          debug(`${remoteAddress}: Saved peer ${ethpeer.enode}`)
         })
-        .then((infuraBlockNumber) => {
-            debug(`Infura Block: ${infuraBlockNumber}`)
-            b.infuraBlockNumber = infuraBlockNumber
-            b.infuraDrift = Math.abs(b.infuraBlockNumber - b.bestBlockNumber) || 0
-            debug(`Found Drift: ${b.infuraDrift}`)
-            // db.on('error', console.error.bind(console, 'connection error:'))
-            b.save().then((ethpeer) => {
-              debug('Saved peer: ' + ethpeer.enode)
-            })
-        })
-        .catch(function (err) {
-            console.error(err)
-        })
-    })
+      })
+      .catch(function (err) {
+        console.error(err)
+      })
+  })
 })
 
 rlpx.on('peer:removed', (peer) => {
-  // console.log(peer.getDisconnectPrefix(peer._disconnectReason))
-  const eth = peer.getProtocols()[0]
-  eth.sendStatus(myStatus)
+  debug(peer._socket.remoteAddress, peer.getDisconnectPrefix(peer._disconnectReason))
+  // const eth = peer.getProtocols()[0]
+  // eth.sendStatus(myStatus)
 })
 
 for (let bootnode of BOOTNODES) {
@@ -128,6 +156,7 @@ dpt.on('error', (err) => console.error(chalk.red(err.stack || err)))
 dpt.on('peer:added', (peer) => {
   // const info = `(${peer.id.toString('hex')},${peer.address},${peer.udpPort},${peer.tcpPort})`
   // console.log(chalk.green(`New peer: ${info} (total: ${dpt.getPeers().length})`))
+  debug(`DHT peer count: ${dpt.getPeers().length}`)
 })
 
 dpt.on('peer:removed', (peer) => {

@@ -10,6 +10,7 @@
     "ethereum-common": "^0.2.1",
     "ethereum-tx-decoder": "^1.0.2",
     "ethereumjs-block": "^1.7.1",
+    "ethereumjs-common": "^0.6.1",
     "ethereumjs-devp2p": "^2.5.1",
     "ethereumjs-tx": "^1.3.7",
     "geoip-lite": "^1.3.5",
@@ -42,7 +43,8 @@
   },
   "scripts": {
     "start": "INFURA_ID=09bcdf3656ee4a80b05a4a921358d109 node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "debug": "DEBUG=devp2p:rplx:*,devp2p:dlt*,infura:* INFURA_ID=09bcdf3656ee4a80b05a4a921358d109 node --inspect index.js"
   },
   "author": {
     "name": "E.G. Galano",
