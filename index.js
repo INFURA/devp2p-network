@@ -12,7 +12,7 @@ const db = require('./lib/db')()
 const Common = require('ethereumjs-common')
 const c = new Common('mainnet')
 const web3Url = process.env.PROVIDER || `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
-web3.setProvider(new web3.providers.HttpProvider(web3Url))
+web3.setProvider(new Web3.providers.HttpProvider(web3Url))
 
 const { EthPeer, PeerErr } = db
 
