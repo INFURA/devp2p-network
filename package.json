@@ -29,7 +29,7 @@
     "rlp": "^2.2.1",
     "rlp-encoding": "^3.0.0",
     "safe-buffer": "^5.1.2",
-    "sequelize": "^4.42.0",
+    "sequelize": "^5.8.1",
     "web3": "^0.20.6"
   },
   "devDependencies": {
