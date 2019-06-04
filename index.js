@@ -6,13 +6,15 @@ const devp2p = require('ethereumjs-devp2p')
 const geoip = require('geoip-lite')
 const debug = require('debug')('infura:main')
 const Web3 = require('web3')
-const web3 = new Web3()
+// https://github.com/ethereum/web3.js/issues/2786
+const web3 = new Web3('http://')
 const _ = require('lodash')
 const db = require('./lib/db')()
 const Common = require('ethereumjs-common')
 const c = new Common('mainnet')
 const web3Url = process.env.PROVIDER || `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
-web3.setProvider(new Web3.providers.HttpProvider(web3Url))
+const ethProvider = new Web3.providers.HttpProvider(web3Url)
+web3.setProvider(ethProvider)
 
 const { EthPeer, PeerErr } = db
 
