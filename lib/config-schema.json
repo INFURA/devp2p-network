@@ -1,0 +1,39 @@
+{
+  "$id": "config-schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "A schema for custom network dev-p2p-network tool configuration file",
+  "type": "object",
+  "properties": {
+    "bootNodes": {
+      "type":"array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type":"string"
+          },
+          "tcpPort": {
+            "type": "number"
+          },
+          "udpPort": {
+            "type": "number"
+          }
+        },
+        "required": [ "address", "tcpPort", "udpPort"]
+      }
+    },
+    "networkID": {
+      "type":"number"
+    },
+    "genesisTD": {
+      "type": "number"
+    },
+    "genesisHash": {
+      "type": "string"
+    },
+    "provider": {
+      "type": "string"
+    }
+  },
+  "required": [ "bootNodes", "networkID", "genesisTD", "genesisHash"]
+}

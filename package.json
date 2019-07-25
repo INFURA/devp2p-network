@@ -4,6 +4,7 @@
   "description": "A devp2p node indexer",
   "main": "app.js",
   "dependencies": {
+    "ajv": "^6.10.2",
     "assert": "^1.5.0",
     "chalk": "^2.4.2",
     "crypto": "^1.0.1",
@@ -30,7 +31,8 @@
     "rlp-encoding": "^3.0.0",
     "safe-buffer": "^5.1.2",
     "sequelize": "^5.8.7",
-    "web3": "^1.0.0-beta.55"
+    "web3": "^1.0.0-beta.55",
+    "yargs": "^13.3.0"
   },
   "devDependencies": {
     "eslint": "^5.16.0",

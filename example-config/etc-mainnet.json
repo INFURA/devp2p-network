@@ -1,0 +1,34 @@
+{
+  "$id": "etc-mainnet-example-config-schema.json",
+  "$schema": "../lib/config-schema.json",
+  "networkID": 1, 
+  "genesisHash": "d4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3",
+  "genesisTD": 17178969184,
+  "bootNodes": [
+    {
+      "address": "162.243.55.45",
+      "tcpPort": 30303,
+      "udpPort": 30303
+    },
+    {
+      "address": "104.237.131.102",
+      "tcpPort": 30303,
+      "udpPort": 30303
+    },
+    {
+      "address": "18.130.93.66",
+      "tcpPort": 30303,
+      "udpPort": 30303
+    },
+    {
+      "address": "188.166.163.187",
+      "tcpPort": 30303,
+      "udpPort": 30303
+    },
+    {
+      "address": "178.62.238.75",
+      "tcpPort": 30303,
+      "udpPort": 30303
+    }
+  ]
+} 
