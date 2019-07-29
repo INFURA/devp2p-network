@@ -10,32 +10,24 @@ const Web3 = require('web3')
 const web3 = new Web3('http://')
 const _ = require('lodash')
 const db = require('./lib/db')()
-const Common = require('ethereumjs-common')
-const c = new Common('mainnet')
-const web3Url = process.env.PROVIDER || `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
+const config = require('./lib/config')
+
+const cfg = config.parseCommands()
+const chainConfig = config.getConfig(cfg)
+const web3Url = process.env.PROVIDER || chainConfig.provider || `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
 const ethProvider = new Web3.providers.HttpProvider(web3Url)
 web3.setProvider(ethProvider)
 
 const { EthPeer, PeerErr } = db
 
 const PRIVATE_KEY = randomBytes(32)
-const BOOTNODES = c.bootstrapNodes().map((node) => {
-  return {
-    address: node.ip,
-    udpPort: node.port,
-    tcpPort: node.port
-  }
-})
 
-const CHAIN_ID = 1
-const GENESIS_TD = 17179869184
-const GENESIS_HASH = Buffer.from('d4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3', 'hex')
-
+const genesisHash = Buffer.from(chainConfig.genesisHash, 'hex')
 const myStatus = {
-  networkId: CHAIN_ID,
-  td: devp2p._util.int2buffer(GENESIS_TD),
-  genesisHash: GENESIS_HASH,
-  bestHash: GENESIS_HASH
+  networkId: chainConfig.networkID,
+  td: devp2p._util.int2buffer(chainConfig.genesisTD),
+  genesisHash,
+  bestHash: genesisHash
 }
 
 const dpt = new devp2p.DPT(Buffer.from(PRIVATE_KEY, 'hex'), {
@@ -148,7 +140,7 @@ rlpx.on('peer:removed', (peer) => {
   // eth.sendStatus(myStatus)
 })
 
-for (let bootnode of BOOTNODES) {
+for (let bootnode of chainConfig.bootNodes) {
   debug(`Connecting to ${bootnode.address}`)
   dpt.bootstrap(bootnode).catch((err) => console.error(chalk.bold.red(err.stack || err)))
 }
