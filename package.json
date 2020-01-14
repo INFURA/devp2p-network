@@ -30,7 +30,7 @@
     "rlp": "^2.2.3",
     "rlp-encoding": "^3.0.0",
     "safe-buffer": "^5.1.2",
-    "sequelize": "^5.12.3",
+    "sequelize": "^5.15.1",
     "web3": "^1.0.0-beta.55",
     "yargs": "^13.3.0"
   },
