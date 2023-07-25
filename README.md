@@ -1,3 +1,8 @@
+# ARCHIVED
+
+Repo has many dependency based security vulnerabilities in current state. Use at own risk.
+
+
 # devp2p-network
 
 Monitor and record metrics from the DevP2P network in PostgresDB and visualize the data using the Metabase analytics tool.
